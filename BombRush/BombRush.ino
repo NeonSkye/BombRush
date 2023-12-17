@@ -76,6 +76,7 @@ byte matrixMap[matrixSize][matrixSize] = {
   {0, 0, 0, 0, 0, 0, 0, 0,}
 };
 
+// Updates room number and coordinates.
 int roomUpdate(int roomNumber)
 {
   switch(roomNumber) {
@@ -98,7 +99,7 @@ int roomUpdate(int roomNumber)
   maxRoomRow = roomRow + 8;
   maxRoomCol = roomCol + 8;
 }
-
+// Translates gameMap room to the matrix display.
 int matrixWrite(int minRow, int minCol, int maxRow, int maxCol) {
   int matrixRow = 0;
   int matrixCol = 0;
