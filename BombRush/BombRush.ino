@@ -57,13 +57,14 @@ int gameMap[mapSize][mapSize] = {
 
 
 int roomNumber = 1; // In what room the player is. 1 - TOP LEFT, 2 - TOP RIGHT, 3 - BOTTOM LEFT,  4 - BOTTOM RIGHT
+// used to convert from global coordinates to local coordinates. This is what allows separate rooms to exist.
 int roomRow = 0;
 int roomCol = 0;
 int maxRoomRow = 8;
 int maxRoomCol = 8;
 bool roomSwitch = false;
 
-
+// What objects should be shown on the real 8x8 LED Matrix.
 byte matrixMap[matrixSize][matrixSize] = {
   {0, 0, 0, 0, 0, 0, 0, 0,},
   {0, 0, 0, 0, 0, 0, 0, 0,},
@@ -123,6 +124,8 @@ int matrixWrite(int minRow, int minCol, int maxRow, int maxCol) {
     }
   }
 }
+
+// Used in settings to light up the whole matrix.
 void matrixShow() {
 for (int row = 0; row < matrixSize; row++) {
   for (int col = 0; col < matrixSize; col++) {
@@ -131,6 +134,7 @@ for (int row = 0; row < matrixSize; row++) {
   }
 }
 
+// The evil twin of the previous function. Used to turn off the whole matrix.
 void matrixHide() {
   for (int row = 0; row < matrixSize; row++) {
   for (int col = 0; col < matrixSize; col++) {
@@ -139,6 +143,7 @@ void matrixHide() {
   }
 }
 
+// Updates the matrix display.
 void matrixUpdate() {
 for (int row = 0; row < matrixSize; row++) {
   for (int col = 0; col < matrixSize; col++) {
@@ -195,8 +200,8 @@ lc.setIntensity(0, matrixBrightness);
 lc.clearDisplay(0);
 Serial.begin(9600);
 }
-//bomb stuff
 
+//bomb stuff
 bool bombPlaced = false;
 bool bombDefused = false;
 int bombRoom = 0;
@@ -234,6 +239,7 @@ void gameOver()
   matrixHide();
 }
 
+// starts the game (duh)
 void startGame() {
 gameStart = true;
 matrixWrite(roomRow, roomCol, maxRoomRow, maxRoomCol);
@@ -251,7 +257,7 @@ void bombSpawn()
   if(gameMap[randX][randY] == 1 || gameMap[randX][randY] == 2 || randX == 7 || randX == 8 || randY == 7 || randY == 8){
     bombPlaced = false;
   } else {
-    gameMap[randX][randY] = 3;
+    gameMap[randX][randY] = 3; // what room the bomb is in. Used to decide what symbol gets shown.
     if(randX <= 7 && randY <= 7) bombRoom = 1;
     if(randX <= 7 && randY >= 8) bombRoom = 2;
     if(randX >= 8 && randY <= 7) bombRoom = 3;
@@ -262,6 +268,7 @@ void bombSpawn()
   }
 
 }
+// similar to roomRow & roomCol. Used so the coordinates displayed are local to the room the bomb is in, instead of global.
 int bombMinX = 0;
 int bombMinY = 0;
 
@@ -275,6 +282,7 @@ int modifySetting = 1;
 bool changeMatrixBright = false;
 bool changeLCDBright = false;
 bool changeSetting = false;
+
 void loop() {
   potValue = analogRead(potPin);
   contrastValue = map(potValue, 0,  1023, 0, 128);
@@ -282,7 +290,7 @@ void loop() {
   yVal = analogRead(pinY);
   swState = digitalRead(pinSW);
   analogWrite(contrastPin, contrastValue);
-  if(inAbout == true) {
+  if(inAbout == true) { // ABOUT menu section
     if(millis() - lastMillis >= 450) {
       
     lcd.autoscroll();
@@ -292,7 +300,7 @@ void loop() {
     lcd.print("https://github.com/NeonSkye/BombRush");
     lastMillis = millis(); 
     }
-    if(swState != lastSwState) {
+    if(swState != lastSwState) { // if button is pressed, go back to main menu
       if (swState == LOW)
       inAbout = false;
       lastSwState = swState;
@@ -300,13 +308,13 @@ void loop() {
       lcd.noAutoscroll();
     }
   } else
-  if(inSettings == true) {
+  if(inSettings == true) { // SETTINGS 
     if(changeSetting == false) 
-    {
+    { // MAIN SETTINGS MENU
     lcd.setCursor(0, menuPointer%2);
     lcd.print(">");
    
-  if(swState != lastSwState) {
+  if(swState != lastSwState) { // Check what option was selected in settings. 
           if(swState == LOW){
             lcd.clear();
             switch(menuArray[menuPointer]) {
@@ -345,22 +353,22 @@ void loop() {
         lcd.clear();
         lastSwState = swState;
       }
-  if(xVal > maxThresh && joyMoved == false) 
+  if(xVal > maxThresh && joyMoved == false) // MOVE DOWN IN MENU
   {
     joyMoved = true;
     menuPointer++;
     lcd.clear();
     }
-  if (xVal < minThresh && joyMoved == false) 
+  if (xVal < minThresh && joyMoved == false) // MOVE UP IN MENU
   {
     joyMoved = true;
     menuPointer--;
     lcd.clear();
   }
-    if(menuPointer == -1) {
+    if(menuPointer == -1) { // LOOP DOWN
     menuPointer = 3;
   } else
-  if (menuPointer <= 1) {
+  if (menuPointer <= 1) { // Page 1
   lcd.setCursor(1,0);
   lcd.setCursor(15, 0);
   lcd.print("|");
@@ -368,20 +376,20 @@ void loop() {
   lcd.print("Matrix Bright");
   lcd.setCursor(1, 1);
   lcd.print("W.I.P option");
-  } else if (menuPointer >= 2 && menuPointer < 4) {
+  } else if (menuPointer >= 2 && menuPointer < 4) { // Page 2
     lcd.setCursor(15, 1);
     lcd.print("|");
     lcd.setCursor(1,0);
     lcd.print("W.I.P option");
     lcd.setCursor(1, 1);
     lcd.print("Exit");
-  } else if (menuPointer == menuOptions + 1) {
+  } else if (menuPointer == menuOptions + 1) { // LOOP UP
     menuPointer = 0;
   }
   if(xVal >= minThresh && xVal <= maxThresh && yVal >= minThresh && yVal <= maxThresh) {
   joyMoved = false;
   }
-  } else {
+  } else { // IN SPECIFIC SETTING
     menuPointer = 0;
     if(xVal > maxThresh && joyMoved == false) 
     {
@@ -400,7 +408,7 @@ void loop() {
     {   
     modifySetting = 10;
 }
-    if(modifySetting <= 0) modifySetting = 0;
+    if(modifySetting <= 0) modifySetting = 0; 
     matrixShow();
     lcd.setCursor(0,0);
     lcd.print(matrixBrightness);
@@ -410,7 +418,7 @@ void loop() {
     if(changeLCDBright == true) {
       lcd.print("W.I.P");
     }
-    if(swState != lastSwState) {
+    if(swState != lastSwState) { // When button is pressed, save changes and go back to settings.
     if(swState == LOW){
     matrixHide();
     changeMatrixBright = false;
@@ -427,26 +435,26 @@ void loop() {
   }
   }
 } else
-  if(gameStart == false) {
+  if(gameStart == false) { // Main Menu
 
   xVal = analogRead(pinX);
   yVal = analogRead(pinY);
   lcd.setCursor(0,menuPointer%2);
   lcd.print(">");
-  if(xVal > maxThresh && joyMoved == false) {
+  if(xVal > maxThresh && joyMoved == false) { // MOVE DOWN 
   joyMoved = true;
   menuPointer++;
   lcd.clear();
   }
-  if (xVal < minThresh && joyMoved == false) {
+  if (xVal < minThresh && joyMoved == false) { // MOVE UP
   joyMoved = true;
   menuPointer--;
   lcd.clear();
   }
-  if(menuPointer == -1) {
+  if(menuPointer == -1) { // LOOP DOWN
     menuPointer = 3;
   } else
-  if (menuPointer <= 1) {
+  if (menuPointer <= 1) { // Page 1
   lcd.setCursor(15, 0);
   lcd.print("|");
   lcd.setCursor(1,0);
@@ -460,29 +468,29 @@ void loop() {
     lcd.print("Settings");
     lcd.setCursor(1, 1);
     lcd.print("About");
-  } else if (menuPointer == menuOptions) {
+  } else if (menuPointer == menuOptions) { // LOOP UP
     menuPointer = 0;
   }
   swState = digitalRead(pinSW);
-  if(swState != lastSwState) {
+  if(swState != lastSwState) { // Enables menu flags based on what was pressed.
           if(swState == LOW){
             switch(menuArray[menuPointer]) {
-              case 1:
+              case 1: // Start
             gameStart = true;
             lcd.clear();
             break;
-              case 2:
+              case 2: // Settings (page 1)
             menuPointer = 0;
             inSettings = true;
             joyMoved = false;
             lcd.clear();
             break;
-              case 3:
+              case 3: // Settings (page 2)
             menuPointer = 0;
             inSettings = true;
             joyMoved = false;
             lcd.clear();
-              case 4:
+              case 4: // About (page 2)
             inAbout = true;
             menuPointer = 0;
             joyMoved = false;
@@ -501,9 +509,9 @@ void loop() {
   else
   {
     if(gameEnd == false)  
-    {
+    { // This is the main game loop
     
-    if(bombPlaced == false){
+    if(bombPlaced == false){ // Spawn a bomb
       bombSpawn();
     } else {
       lcd.setCursor(0,0);
@@ -537,10 +545,10 @@ void loop() {
     }
     swState = digitalRead(pinSW);
     if(swState != lastSwState) {
-    if(swState == LOW && bombPlaced == true && getObjRow(5) != -1) {
+    if(swState == LOW && bombPlaced == true && getObjRow(5) != -1) { // This only works if there's a player on a bomb object (5).
       bombPlaced = false;
       score = score + 1;
-      timer = timer + 5000;
+      timer = timer + 5000; // + 5 Seconds whenever a bomb is defused.
       setObject(getObjRow(5),getObjCol(5), 2);
       lcd.clear();
       }
@@ -552,7 +560,7 @@ void loop() {
 
     xVal = analogRead(pinX);
     yVal = analogRead(pinY);
-    if(getObjRow(2) > -1) {
+    if(getObjRow(2) > -1) { // If the player object isn't on a bomb, move player object.
       blinkPlayer(getObjRow(2), getObjCol(2));
       if(xVal > maxThresh && millis() - playerMove >= playerMoveDelay) {
         movePlayer(2, 2, getObjRow(2), getObjCol(2)); // GO DOWN
@@ -575,7 +583,7 @@ void loop() {
         joyMoved = true;
       }
     }
-    else {
+    else { // There is a player object on a bomb instead, move this special player object. This way bombs won't disappear simply by walking over them.
         if(xVal > maxThresh && millis() - playerMove >= playerMoveDelay){
         movePlayer(5, 2, getObjRow(5), getObjCol(5)); // GO DOWN
         playerMove = millis();
@@ -612,7 +620,7 @@ void loop() {
       gameOver();
       }
 
-      if(score >= 25) timerDelay = 850;
+      if(score >= 25) timerDelay = 850; // Game gets harder the more bombs you pick.
       if(score >= 50) timerDelay = 650;
       if(score >= 100) timerDelay = 325;
 
@@ -635,7 +643,7 @@ void loop() {
   }
 }
 
-int blinkPlayer (int row, int col) {
+int blinkPlayer (int row, int col) { // Blinks the player LED.
   if (millis() - startPlayerBlink >= playerBlinkDelay) {
     statePlayerBlink = !statePlayerBlink;
     lc.setLed(0, row, col, statePlayerBlink);
@@ -643,7 +651,7 @@ int blinkPlayer (int row, int col) {
   }
 }
 
-int getObjRow(int object)  {
+int getObjRow(int object)  { // Gets the row of an object. (This only works on Player, Bomb, Player on bomb). ((Why would you get the row of a wall?))
   int result = -1;
   for (int row = 0; row < matrixSize; row++) {
     for(int col = 0; col < matrixSize; col++)  
@@ -659,7 +667,7 @@ int getObjRow(int object)  {
   return result;
 }
 
-int getObjCol(int object)  {
+int getObjCol(int object)  { // The twin of getObjRow. Gets the column.
   int result = -1;
   for (int row = 0; row < matrixSize; row++) {
     for(int col = 0; col < matrixSize; col++)  
@@ -675,11 +683,11 @@ int getObjCol(int object)  {
   return result;
 }
 
-int movePlayer(int object, int direction, int row, int col){
+int movePlayer(int object, int direction, int row, int col){ // Movement logic for the player.
   if(object == 5) {
     if(bombDefused == false) {
   matrixMap[row][col] = 3;
-  lc.setLed(0, row, col, 0); // for debugging. Bombs will be invisible so this is not needed.
+  //lc.setLed(0, row, col, 0); // for debugging. Bombs will be invisible so this is not needed.
   gameMap[row+roomRow][col+roomCol] = 3;
   }
   else {
@@ -863,7 +871,7 @@ switch(direction)
 }
 
 }
-int setObject (int row, int col, int object)
+int setObject (int row, int col, int object) // sets an object in the local room.
 {
   matrixMap[row][col] = object;
   lc.setLed(0, row, col, 1);
