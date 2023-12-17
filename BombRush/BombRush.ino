@@ -283,13 +283,21 @@ void loop() {
   swState = digitalRead(pinSW);
   analogWrite(contrastPin, contrastValue);
   if(inAbout == true) {
+    if(millis() - lastMillis >= 450) {
+      
+    lcd.autoscroll();
     lcd.setCursor(0,0);
     lcd.print("BombRush!");
+    lcd.setCursor(0,1);
+    lcd.print("https://github.com/NeonSkye/BombRush");
+    lastMillis = millis(); 
+    }
     if(swState != lastSwState) {
       if (swState == LOW)
       inAbout = false;
       lastSwState = swState;
       lcd.clear();
+      lcd.noAutoscroll();
     }
   } else
   if(inSettings == true) {
@@ -615,10 +623,6 @@ void loop() {
     }
     else {
       swState = digitalRead(pinSW);
-      if(millis() - lastMillis >= 200) {
-        lcd.setCursor(0,0);
-        lcd.setCursor(0,1);
-        lastMillis = millis();
         if(swState != lastSwState) {
           if(swState == LOW){
             gameEnd = false;
@@ -626,7 +630,6 @@ void loop() {
             lcd.clear();
           }
         lastSwState = swState;
-      }
       }
     }
   }
